@@ -1,0 +1,257 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "id": 6,
+        "properties": {
+          "marker-color": "#f50e07",
+          "marker-size": "medium",
+          "marker-symbol": "",
+          "stroke": "#ff0000",
+          "stroke-width": 2.4,
+          "stroke-opacity": 1,
+          "name": "Aries",
+          "rank": 1
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            42,
+            22
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "id": 3,
+        "properties": {
+          "marker-color": "#b366ff",
+          "marker-size": "medium",
+          "marker-symbol": "",
+          "stroke": "#0206a8",
+          "stroke-width": 3,
+          "stroke-opacity": 1,
+          "name": "Aquarius",
+          "rank": 2
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -22.5,
+            -5
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "id": 11,
+        "properties": {
+          "marker-color": "#00d535",
+          "marker-size": "medium",
+          "marker-symbol": "",
+          "stroke": "#44be41",
+          "stroke-width": 3,
+          "stroke-opacity": 1,
+          "name": "Cancer",
+          "rank": 2
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            128.25,
+            27
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "id": 15,
+        "properties": {
+          "marker-color": "#ff00ff",
+          "marker-size": "medium",
+          "marker-symbol": "",
+          "stroke": "#e21de2",
+          "stroke-width": 3,
+          "stroke-opacity": 1,
+          "name": "Capricorn",
+          "rank": 2
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -45,
+            -22
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "id": 37,
+        "properties": {
+          "marker-color": "#ff8000",
+          "marker-size": "medium",
+          "marker-symbol": "",
+          "stroke": "#ff8000",
+          "stroke-width": 3,
+          "stroke-opacity": 1,
+          "name": "Gemini",
+          "rank": 1
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            107.25,
+            23.5
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "id": 45,
+        "properties": {
+          "marker-color": "#ffff00",
+          "marker-size": "medium",
+          "marker-symbol": "",
+          "stroke": "#e7e118",
+          "stroke-width": 3,
+          "stroke-opacity": 1,
+          "name": "Leo",
+          "rank": 1
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            159,
+            15
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "id": 48,
+        "properties": {
+          "marker-color": "#ff9c6c",
+          "marker-size": "medium",
+          "marker-symbol": "",
+          "stroke": "#f29871",
+          "stroke-width": 3,
+          "stroke-opacity": 1,
+          "name": "Libra",
+          "rank": 2
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -129,
+            -26
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "id": 65,
+        "properties": {
+          "marker-color": "#0080ff",
+          "marker-size": "medium",
+          "marker-symbol": "",
+          "stroke": "#4782ef",
+          "stroke-width": 3,
+          "stroke-opacity": 1,
+          "name": "Pisces",
+          "rank": 2
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            19.5,
+            15
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "id": 71,
+        "properties": {
+          "marker-color": "#ff97ff",
+          "marker-size": "medium",
+          "marker-symbol": "",
+          "stroke": "#f3a7e4",
+          "stroke-width": 3,
+          "stroke-opacity": 1,
+          "name": "Sagittarius",
+          "rank": 1
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -67.5,
+            -34
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "id": 72,
+        "properties": {
+          "marker-color": "#008080",
+          "marker-size": "medium",
+          "marker-symbol": "",
+          "stroke": "#1d6361",
+          "stroke-width": 3,
+          "stroke-opacity": 1,
+          "name": "Scorpio",
+          "rank": 1
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -111,
+            -38
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "id": 78,
+        "properties": {
+          "marker-color": "#800000",
+          "marker-size": "medium",
+          "marker-symbol": "",
+          "stroke": "#800000",
+          "stroke-width": 3,
+          "stroke-opacity": 1,
+          "name": "Taurus",
+          "rank": 1
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            54,
+            15
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "id": 86,
+        "properties": {
+          "marker-color": "#132eea",
+          "marker-size": "medium",
+          "marker-symbol": "",
+          "stroke": "#8000ff",
+          "stroke-width": 3,
+          "stroke-opacity": 1,
+          "name": "Virgo",
+          "rank": 1
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -160.5,
+            -4
+          ]
+        }
+      }
+    ]
+  }
