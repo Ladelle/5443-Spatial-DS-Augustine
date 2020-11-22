@@ -2,17 +2,19 @@ import os
 import sys
 import json
 import csv
-import flask
+import geojson
+import geopandas as gpd
+
 from flask import Flask,  url_for
 from flask import request
 from flask import jsonify
 from flask_cors import CORS
 from flask import send_file
 import glob
-
+from scipy.spatial import KDTree # added this 10/18/2020
 from misc_functions import haversine, bearing
 
-base_path = '/Users/Delly/Desktop/NewEnv/5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data/'
+base_path = '5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data'
 
 app = Flask(__name__)
 CORS(app)
@@ -49,7 +51,39 @@ def load_data(path):
                      data = csv.DictReader(csvfile)
 
                      return list(data)
+            elif ftype == ".geojson":  # added this 10/18/2020 --> changed this 10/20/2020
+                with open(path) as f:
+                    if ftype == ".geojson":
+                        data = f.read()
+                        return json.loads(data)
+
+
     return None
+
+
+#  ██╗  ██╗██████╗ ████████╗██████╗ ███████╗███████╗███████╗                                                                                                                                  
+#  ██║ ██╔╝██╔══██╗╚══██╔══╝██╔══██╗██╔════╝██╔════╝██╔════╝                                                                                                                                  
+#  █████╔╝ ██║  ██║   ██║   ██████╔╝█████╗  █████╗  █████╗█████╗█████╗█████╗█████╗█████╗█████╗█████╗█████╗█████╗█████╗█████╗█████╗█████╗█████╗█████╗█████╗█████╗█████╗█████╗█████╗█████╗█████╗
+#  ██╔═██╗ ██║  ██║   ██║   ██╔══██╗██╔══╝  ██╔══╝  ██╔══╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝╚════╝
+#  ██║  ██╗██████╔╝   ██║   ██║  ██║███████╗███████╗███████╗                                                                                                                                  
+#  ╚═╝  ╚═╝╚═════╝    ╚═╝   ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝                                                                                                                                  
+                                                                                                                                                                                            
+
+def getTree():
+    coords = []
+    # with open ('Assignments/A04/assets/api/data/fixed_ufos.geojson', 'r') as f:
+    #     data = json.load(f)
+    
+    for feature in UFO['features']:
+        if type(feature['geometry']['coordinates'][0]) !=float or type(feature['geometry']['coordinates'][1]) !=float:
+            pass
+        else:
+            coords.append(feature['geometry']['coordinates'])
+
+    tree = KDTree(coords)
+    print("This is tree: ",tree)
+    return tree, coords
+
 """
 ---------------------------------------------------------------------------------------------------------------
 ---------------------------------------DATA BACKEND-----------------------------------------------------------
@@ -61,14 +95,24 @@ def load_data(path):
 BIG GLOBALS --> KIND OF ACTING LIKE DATABASE
 """
 
-"""
-HELPER FUNCTIONS 
+# ██████╗  █████╗ ████████╗ █████╗     ██╗      ██████╗  █████╗ ██████╗ ██╗███╗   ██╗ ██████╗     
+# ██╔══██╗██╔══██╗╚══██╔══╝██╔══██╗    ██║     ██╔═══██╗██╔══██╗██╔══██╗██║████╗  ██║██╔════╝     
+# ██║  ██║███████║   ██║   ███████║    ██║     ██║   ██║███████║██║  ██║██║██╔██╗ ██║██║  ███╗    
+# ██║  ██║██╔══██║   ██║   ██╔══██║    ██║     ██║   ██║██╔══██║██║  ██║██║██║╚██╗██║██║   ██║    
+# ██████╔╝██║  ██║   ██║   ██║  ██║    ███████╗╚██████╔╝██║  ██║██████╔╝██║██║ ╚████║╚██████╔╝    
+# ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝    ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚═╝╚═╝  ╚═══╝ ╚═════╝     
+                                                                                                
 
 """
-STATES = load_data("/Users/Delly/Desktop/NewEnv/5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data/states.json")
+DATA
 
-STATES_BBOXS = load_data("/Users/Delly/Desktop/NewEnv/5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data/us_states_bbox.csv")
-
+"""
+STATES = load_data("5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data/states.json")
+STATES_BBOXS = load_data("5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data/us_states_bbox.csv")
+UFO = load_data("5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data/fixed_ufos.geojson")
+CRASH =load_data("5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data/plane_crashes/crash_data_1920-2020.json")
+# EARTHQUAKE = load_data("/Users/Delly/Desktop/NewEnv/5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data/earthquake_2020_7.json")
+# RAILROADS = load_data("/Users/Delly/Desktop/NewEnv/5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data/us_railroads.geojson")
 
 # with open("/Users/Delly/Desktop/NewEnv/5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data/states.json") as f:
 #     data = f.read()
@@ -80,9 +124,23 @@ STATES_BBOXS = load_data("/Users/Delly/Desktop/NewEnv/5443-Spatial-DS-Augustine/
 # data = open(os.path.join(base_path,'states.json'),'r').read()
 # STATES = json.loads(data)
 
-crash_files = glob.glob(os.path.join(base_path,"plane_crashes/crash_data/*.json"))
+# crash_files = glob.glob(os.path.join(base_path,"plane_crashes/crash_data/*.json"))
+
+# ADDED 10/20/2020 @ 6:13PM ---------------------------------------------------------------------------
+sid = -1
+result_feature ={
+    'type': 'FeatureCollection',
+    'features':[],
+}
 
 
+# ██████╗  ██████╗ ██╗   ██╗████████╗███████╗███████╗
+# ██╔══██╗██╔═══██╗██║   ██║╚══██╔══╝██╔════╝██╔════╝
+# ██████╔╝██║   ██║██║   ██║   ██║   █████╗  ███████╗
+# ██╔══██╗██║   ██║██║   ██║   ██║   ██╔══╝  ╚════██║
+# ██║  ██║╚██████╔╝╚██████╔╝   ██║   ███████╗███████║
+# ╚═╝  ╚═╝ ╚═════╝  ╚═════╝    ╚═╝   ╚══════╝╚══════╝
+                                                   
 """
   ------------------------ ROUTES --------------------------------------------
 """
@@ -114,6 +172,184 @@ def getRoutes():
     response = json.dumps(routes,indent=4,sort_keys=True)
     response = response.replace("\n","<br>")
     return "<pre>"+response+"</pre>"
+
+#      ██╗███████╗ ██████╗ ███╗   ██╗    ███████╗ █████╗ ██╗   ██╗███████╗██████╗     ███████╗██████╗  ██████╗ ███╗   ██╗████████╗    ███████╗███╗   ██╗██████╗     ██╗███╗   ██╗███████╗ ██████╗ 
+#      ██║██╔════╝██╔═══██╗████╗  ██║    ██╔════╝██╔══██╗██║   ██║██╔════╝██╔══██╗    ██╔════╝██╔══██╗██╔═══██╗████╗  ██║╚══██╔══╝    ██╔════╝████╗  ██║██╔══██╗    ██║████╗  ██║██╔════╝██╔═══██╗
+#      ██║███████╗██║   ██║██╔██╗ ██║    ███████╗███████║██║   ██║█████╗  ██║  ██║    █████╗  ██████╔╝██║   ██║██╔██╗ ██║   ██║       █████╗  ██╔██╗ ██║██║  ██║    ██║██╔██╗ ██║█████╗  ██║   ██║
+# ██   ██║╚════██║██║   ██║██║╚██╗██║    ╚════██║██╔══██║╚██╗ ██╔╝██╔══╝  ██║  ██║    ██╔══╝  ██╔══██╗██║   ██║██║╚██╗██║   ██║       ██╔══╝  ██║╚██╗██║██║  ██║    ██║██║╚██╗██║██╔══╝  ██║   ██║
+# ╚█████╔╝███████║╚██████╔╝██║ ╚████║    ███████║██║  ██║ ╚████╔╝ ███████╗██████╔╝    ██║     ██║  ██║╚██████╔╝██║ ╚████║   ██║       ███████╗██║ ╚████║██████╔╝    ██║██║ ╚████║██║     ╚██████╔╝
+#  ╚════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝    ╚══════╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝╚═════╝     ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝       ╚══════╝╚═╝  ╚═══╝╚═════╝     ╚═╝╚═╝  ╚═══╝╚═╝      ╚═════╝ 
+                                                                                                                                                                                                
+"""
+THIS FILE HAS INFO FRON FRONT END SAVED TO JSON FILE
+"""
+@app.route('/jsonSavedFront')
+def jsonSavedFront():
+    with open('/Users/Delly/Desktop/NewEnv/5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data/mapPoints.geojson','w') as out:
+        json.dump(result_feature, out, indent = "   ")
+    
+
+    return "DONE"
+
+
+# ██████╗ ███████╗██╗      ██████╗  █████╗ ██████╗          ██╗███████╗ ██████╗ ███╗   ██╗    ███████╗██╗██╗     ███████╗    
+# ██╔══██╗██╔════╝██║     ██╔═══██╗██╔══██╗██╔══██╗         ██║██╔════╝██╔═══██╗████╗  ██║    ██╔════╝██║██║     ██╔════╝    
+# ██████╔╝█████╗  ██║     ██║   ██║███████║██║  ██║         ██║███████╗██║   ██║██╔██╗ ██║    █████╗  ██║██║     █████╗      
+# ██╔══██╗██╔══╝  ██║     ██║   ██║██╔══██║██║  ██║    ██   ██║╚════██║██║   ██║██║╚██╗██║    ██╔══╝  ██║██║     ██╔══╝      
+# ██║  ██║███████╗███████╗╚██████╔╝██║  ██║██████╔╝    ╚█████╔╝███████║╚██████╔╝██║ ╚████║    ██║     ██║███████╗███████╗    
+# ╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝      ╚════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝    ╚═╝     ╚═╝╚══════╝╚══════╝    
+  
+"""
+THIS FILE takes the json file we created using the front end info and reloads it 
+"""                                                                                                                         
+
+@app.route('/reload')
+def reloadJson():
+    global sid, result_feature
+    with open('/Users/Delly/Desktop/NewEnv/5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data/mapPoints.geojson','r') as infile:
+       result_feature= json.load(infile)
+       coordinatesNum = len(result_feature['features'])
+       sid = coordinatesNum
+    
+
+    return jsonify(coordinatesNum,result_feature['features'])
+
+# ██████╗  ██████╗ ██╗███╗   ██╗████████╗███████╗ █████╗ ██╗   ██╗███████╗██████╗ 
+# ██╔══██╗██╔═══██╗██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗██║   ██║██╔════╝██╔══██╗
+# ██████╔╝██║   ██║██║██╔██╗ ██║   ██║   ███████╗███████║██║   ██║█████╗  ██║  ██║
+# ██╔═══╝ ██║   ██║██║██║╚██╗██║   ██║   ╚════██║██╔══██║╚██╗ ██╔╝██╔══╝  ██║  ██║
+# ██║     ╚██████╔╝██║██║ ╚████║   ██║   ███████║██║  ██║ ╚████╔╝ ███████╗██████╔╝
+# ╚═╝      ╚═════╝ ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝╚═════╝ 
+                                                                                
+"""
+Saves The points where the lon lat was called into feautre collection
+Example: http://localhost:8080/pointSaved?lon=-82.1888889&lat=36.595
+"""
+@app.route('/pointSaved')
+def pointSaved():
+    global sid, result_feature
+    sid +=1
+    lon = float(request.args.get('lon',None))
+    lat = float(request.args.get('lat',None))
+    # num = int(request.args.get('num',None))
+    result_feature['features'].append({
+        'type':'Feature',
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [lon, lat]
+        },
+        'properties': {
+            'source': str(sid)
+        }
+    })
+    return (str(sid))  #saves the source id # and returns it
+
+
+# ██████╗  ██████╗ ██╗███╗   ██╗████████╗███████╗    ███████╗██████╗  █████╗ ███████╗███████╗██████╗ 
+# ██╔══██╗██╔═══██╗██║████╗  ██║╚══██╔══╝██╔════╝    ██╔════╝██╔══██╗██╔══██╗██╔════╝██╔════╝██╔══██╗
+# ██████╔╝██║   ██║██║██╔██╗ ██║   ██║   ███████╗    █████╗  ██████╔╝███████║███████╗█████╗  ██║  ██║
+# ██╔═══╝ ██║   ██║██║██║╚██╗██║   ██║   ╚════██║    ██╔══╝  ██╔══██╗██╔══██║╚════██║██╔══╝  ██║  ██║
+# ██║     ╚██████╔╝██║██║ ╚████║   ██║   ███████║    ███████╗██║  ██║██║  ██║███████║███████╗██████╔╝
+# ╚═╝      ╚═════╝ ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝    ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚═════╝ 
+                                                                                                   
+"""
+Erases the points in feature collection in after done in html
+"""
+
+@app.route('/pointErased')
+def pointErased():
+    global sid, result_feature
+    sid = -1
+    coordinatesNum = len(result_feature['features'])
+    coordsErasedFromFile = result_feature['features']
+    result_feature['feature'] = []
+    print("coordinate #:",coordinatesNum,"coords erased:", coordsErasedFromFile)
+    return jsonify(coordinatesNum,coordsErasedFromFile)
+
+# ██╗      █████╗ ██╗   ██╗███████╗██████╗ ███████╗    ███╗   ███╗ █████╗ ██████╗     ██████╗  █████╗ ████████╗ █████╗ 
+# ██║     ██╔══██╗╚██╗ ██╔╝██╔════╝██╔══██╗██╔════╝    ████╗ ████║██╔══██╗██╔══██╗    ██╔══██╗██╔══██╗╚══██╔══╝██╔══██╗
+# ██║     ███████║ ╚████╔╝ █████╗  ██████╔╝███████╗    ██╔████╔██║███████║██████╔╝    ██║  ██║███████║   ██║   ███████║
+# ██║     ██╔══██║  ╚██╔╝  ██╔══╝  ██╔══██╗╚════██║    ██║╚██╔╝██║██╔══██║██╔═══╝     ██║  ██║██╔══██║   ██║   ██╔══██║
+# ███████╗██║  ██║   ██║   ███████╗██║  ██║███████║    ██║ ╚═╝ ██║██║  ██║██║         ██████╔╝██║  ██║   ██║   ██║  ██║
+# ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝    ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝         ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝
+
+
+                                                                                                               
+
+
+# ███╗   ██╗███████╗ █████╗ ██████╗ ███████╗███████╗████████╗    ███╗   ██╗███████╗██╗ ██████╗ ██╗  ██╗██████╗  ██████╗ ██████╗      ██████╗ ██████╗ ██████╗ ███████╗
+# ████╗  ██║██╔════╝██╔══██╗██╔══██╗██╔════╝██╔════╝╚══██╔══╝    ████╗  ██║██╔════╝██║██╔════╝ ██║  ██║██╔══██╗██╔═══██╗██╔══██╗    ██╔════╝██╔═══██╗██╔══██╗██╔════╝
+# ██╔██╗ ██║█████╗  ███████║██████╔╝█████╗  ███████╗   ██║       ██╔██╗ ██║█████╗  ██║██║  ███╗███████║██████╔╝██║   ██║██████╔╝    ██║     ██║   ██║██║  ██║█████╗  
+# ██║╚██╗██║██╔══╝  ██╔══██║██╔══██╗██╔══╝  ╚════██║   ██║       ██║╚██╗██║██╔══╝  ██║██║   ██║██╔══██║██╔══██╗██║   ██║██╔══██╗    ██║     ██║   ██║██║  ██║██╔══╝  
+# ██║ ╚████║███████╗██║  ██║██║  ██║███████╗███████║   ██║       ██║ ╚████║███████╗██║╚██████╔╝██║  ██║██████╔╝╚██████╔╝██║  ██║    ╚██████╗╚██████╔╝██████╔╝███████╗
+# ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝       ╚═╝  ╚═══╝╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝     ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝
+                                                                                                                                                                   
+"""
+GETS THE NEAREST NEIGHBORS 
+"""
+
+nearNum = -1
+neighborsFeatures = {
+    'type':'FeatureCollection',
+    'features':[]
+}
+
+@app.route('/neighbor', methods = ["GET"])
+def findNearestNeigbors():
+    """ Description: Return x nearest neigbhors for give lon lat coords
+        Params: 
+            None
+        Example: http://localhost:8080/neighbor?lon=<longitude>&lat=<latitude>&num=<number of nearest neighbors to find>
+        http://localhost:8080/neighbor?lon=-2.916667&lat=53.2&num=10
+    """
+    global tree 
+    global coords
+    global nearNum
+    global neighbors
+    global sid
+   
+    
+    nearNum += 1
+
+    lon = float(request.args.get('lon',None))
+    lat = float(request.args.get('lat',None))
+    num = int(request.args.get('num',None))
+    sid += 1
+    searchCoords=[lon,lat]     #[[98.581081, 29.38421],[98.581081, 29.38421]]
+
+    
+    # returns an array of distances and an array of indices for nearest neighbors
+    distanceList, neighborList = tree.query(searchCoords,k=num,distance_upper_bound=180)
+    
+    # prints the results of the query to the console
+   # prints the results of the query to the console
+    if num > 1:
+        for i in range(0,len(distanceList)):
+            print(f"\nLng, Lat: {lon}, {lat}\nNearest neighbor: {coords[neighborList[i]]}\tDistance: {distanceList[i]}")
+           
+    else:
+            print(f"\nLng, Lat: {lon}, {lat}\nNearest neighbor: {neighborList}\tDistance: {distanceList}")
+     
+   
+    neighbors = []
+  
+    if num == 1:
+        point = geojson.Point(coords[0])
+        neighbors.append(geojson.Feature(geometry=point )) 
+    else:
+        for i in neighborList:
+            # neighbors.append(coords[i])
+    # neighbors = geojson.FeatureCollection(neighbors)
+           
+            point = geojson.Point(coords[i])
+            neighbors.append(geojson.Feature(id=sid,geometry=point,properties = None ))
+    neighbors = geojson.FeatureCollection(neighbors)
+   
+    
+    return neighbors #(str(nearNum),neighbors) #result_feature #handle_response(neighbors)
+
+
+ 
 """
 VIDEO PART 2: STATES
 Dr. Griffin : https://www.youtube.com/watch?v=WX9OBH8Zv0M
@@ -142,12 +378,19 @@ def states():
         results = STATES
     return handle_response(results)
 
+# Testing 
+@app.route('/ufo')
+def datasetUFO():
+    with open("/Users/Delly/Desktop/NewEnv/5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data/fixed_ufos.geojson") as f:
+        data = f.read()
+        return json.loads(data)
+
 @app.route('/state_bbox', methods=["GET"])
 def state_bbox():
     """
     Description: return a bounding box for a us state
     Params: None
-    Example: http://localhost:8080/state_bbox?<statename>
+    Example: http://localhost:8080/state_bbox?state=<statename>
     """
     
     state = request.args.get('state',None)
@@ -215,45 +458,14 @@ def get_direction():
 -----------------------------PROJECT ------------------------------------
 """
 
-# @app.route('/color/hex/<string:name>', methods=["GET"])
-# def rgb(name):
-#     """ Description: return hex value for a color
-#         Params: 
-#             name (string) : color name
-#         Example: http://localhost:8080/color/hex/blue
-#     """
-#     data = []
 
-#     for color in COLORS:
-#         if color["name"] == name:
-#             data = color["hex"]
-
-#     return handle_response(data)
-
-
-
-# @app.route('/crashes', methods=["GET"])
-# def crashes():
-#     """ Description: return menu for front end
-#         Params: 
-#             None
-#         Example: http://localhost:8080/states
-#     """
-#     state = request.args.get('state',None)
-    
-#     if state:
-#         results = []
-#         for state in STATES:
-#             if filter.lower() == state['name'][:len(filter)].lower():
-#                 results.append(state)
-#     else:
-#         results = STATES
-
-#     return handle_response(results)
-
-"""
------------------------------PRIVATE --------------------------------------------------
-"""
+# ██████╗ ██████╗ ██╗██╗   ██╗ █████╗ ████████╗███████╗    ███████╗██╗   ██╗███╗   ██╗ ██████╗████████╗██╗ ██████╗ ███╗   ██╗
+# ██╔══██╗██╔══██╗██║██║   ██║██╔══██╗╚══██╔══╝██╔════╝    ██╔════╝██║   ██║████╗  ██║██╔════╝╚══██╔══╝██║██╔═══██╗████╗  ██║
+# ██████╔╝██████╔╝██║██║   ██║███████║   ██║   █████╗      █████╗  ██║   ██║██╔██╗ ██║██║        ██║   ██║██║   ██║██╔██╗ ██║
+# ██╔═══╝ ██╔══██╗██║╚██╗ ██╔╝██╔══██║   ██║   ██╔══╝      ██╔══╝  ██║   ██║██║╚██╗██║██║        ██║   ██║██║   ██║██║╚██╗██║
+# ██║     ██║  ██║██║ ╚████╔╝ ██║  ██║   ██║   ███████╗    ██║     ╚██████╔╝██║ ╚████║╚██████╗   ██║   ██║╚██████╔╝██║ ╚████║
+# ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═══╝  ╚═╝  ╚═╝   ╚═╝   ╚══════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝
+                                                                                                                           
 
 def handle_response(data,params=None,error=None):
     """ handle_response
@@ -261,14 +473,13 @@ def handle_response(data,params=None,error=None):
     success = True
     if data:
         if not isinstance(data,list):
-            data = [data]
+            data = data
         count = len(data)
     else:
         count = 0
         error = "Data variable is empty!"
-
     
-    result = {"success":success,"count":count,"results":data,"params":params}
+    result = {"success":success,"count":count, "FeatureCollection": data,"id": params}
 
     if error:
         success = False
@@ -276,8 +487,6 @@ def handle_response(data,params=None,error=None):
     
 
     return jsonify(result)
-
-
 
 def formatHelp(route):
     """
@@ -302,7 +511,20 @@ def isFloat(string):
     except ValueError:
         return False
 
-
-        
+# def dataSets(dataset):
+#     global layers_mapdata
+#     searchData =[]
+#     for i in dataset:
+#         if dataset[dataset]:
+#             if not layers_mapdata[i]["loaded"]:
+#                 loadedInfo = getTree(layers_mapdata[dataset]["path"])
+#                 layers_mapdata[dataset]["loaded"] = True
+#                 layers_mapdata[dataset]["kdtree"] = loadedInfo[0]
+#                 layers_mapdata[dataset]["mapId"] = loadedInfo[1]
+#             else:
+#                 loadedInfo = (layers_mapdata[dataset]["kdtree"], layers_mapdata[dataset]["mapId"])
+#             searchData.append(loadedInfo)
+#     return searchData
 if __name__ == '__main__':
-      app.run(host='localhost', port=8080,debug=True)
+      tree, coords = getTree()
+      app.run(host='localhost', port=7878,debug=True)

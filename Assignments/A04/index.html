@@ -215,11 +215,16 @@
                             <i class="fa fa-fw fa-search"></i>
                         </a>
                     </li>
+
                     <li>
-                        <!-- City  Button -->
-                        <a class="clickable" data-toggle="modal" data-target="#citiesModal" title="Display Cities">
-                            <i class="far fa-building"></i>
+                        <!-- NearNeighbors  Button -->
+                        <a class="clickable" data-toggle="modal" data-target="#nearestNeighbors" title="Display Nearest Neighbors">
+                            <i class="fas fa-user-friends"></i>
                         </a>
+                    </li>
+                    <li>
+                        <!-- Upload GeoJSON Button -->
+                        <a class="clickable" data-toggle="modal" data-target="#uploadGeo" title="Upload GeoJSON"><i class="fas fa-globe"></i></a>
                     </li>
                     <li>
                         <!-- Bbox   Button -->
@@ -239,6 +244,7 @@
         <!-- Start Modals - Tool Panels -->
         <!-- Start Modals - Tool Panels -->
         <!-- Start Modals - Tool Panels -->
+
         <!-- Layer List Modal -->
         <!-- Layer List Modal -->
         <!-- Layer List Modal -->
@@ -308,6 +314,25 @@
                         <div style="display: flex; flex-direction: row">
                             <div id="customDrawColor" style="padding-top: 7px;"></div>
                         </div>
+                        <br>
+                        <hr>
+                        <br>
+                        <p style="margin-bottom: -1px; padding: 0px 0px 5px 0px; width: 100%;">
+                            <br> Pick a state to start in...
+                        </p>
+                        <select class="state-picker" id="pickState" data-placeholder="Layer Picker"></select>
+                        <p style="margin-bottom: -1px; padding: 0px 0px 5px 0px; width: 100%;">
+                            <br> Pick a state to stop in...
+                        </p>
+                        <select class="state-picker" id="pickeState" data-placeholder="Layer Picker"></select>
+                        <br>
+                        <div style="display: inline-flex;" id="target_layer">
+                            <button class="clickable" type="submit" id="search_general">
+                                    <i class="fa fa-search"></i>
+                                </button>
+
+                        </div>
+
                         <br>
                         <hr>
                         <br>
@@ -383,6 +408,57 @@
                         </div>
                         <br>
                         <hr style="margin-top: 10px; margin-bottom: 10px">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!--                                                                                                                    
+                                                                                                                   
+                                                                                                                   
+                                                                                                                   
+ ██████╗ ███████╗ ██████╗      ██╗███████╗ ██████╗ ███╗   ██╗    ██╗   ██╗██████╗ ██╗      ██████╗  █████╗ ██████╗ 
+██╔════╝ ██╔════╝██╔═══██╗     ██║██╔════╝██╔═══██╗████╗  ██║    ██║   ██║██╔══██╗██║     ██╔═══██╗██╔══██╗██╔══██╗
+██║  ███╗█████╗  ██║   ██║     ██║███████╗██║   ██║██╔██╗ ██║    ██║   ██║██████╔╝██║     ██║   ██║███████║██║  ██║
+██║   ██║██╔══╝  ██║   ██║██   ██║╚════██║██║   ██║██║╚██╗██║    ██║   ██║██╔═══╝ ██║     ██║   ██║██╔══██║██║  ██║
+╚██████╔╝███████╗╚██████╔╝╚█████╔╝███████║╚██████╔╝██║ ╚████║    ╚██████╔╝██║     ███████╗╚██████╔╝██║  ██║██████╔╝
+ ╚═════╝ ╚══════╝ ╚═════╝  ╚════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝     ╚═════╝ ╚═╝     ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ 
+                                                                                                                    -->
+
+        <!-- Upload geoJSON Modal -->
+        <!-- Upload geoJSON Modal -->
+        <!-- Upload geoJSON Modal -->
+        <div class="modal left fade" id="uploadGeo" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel"><i class="fas fa-globe"></i>&nbsp;Upload GeoJSON</h4>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <hr>
+                        <br />
+
+                        <!-- paste data -->
+                        <div style="vertical-align:top;">
+                            <p style="font-size: 12px; vertical-align: text-top;">Paste Your geoJSON Below:</p>
+                            <textarea id="geoJSONTextBox" name="geoJSONtextBox" rows="4" cols="50" style="height:400px; width: 100%; font-size: 11px; padding: 2px; margin:2px">{'type': 'FeatureCollection','features': []}</textarea><br>
+                            <div style="padding-top:10px">
+                                <input type="button" value="upload" id="submitGeoJ" style="font-size: 10px;">
+                                <input type="button" value="clear" id="clearGeoJ" style="font-size: 10px;">
+                            </div>
+                        </div>
+
+                        <br />
+                        <hr>
+                        <br />
+
                     </div>
                 </div>
             </div>
@@ -468,6 +544,10 @@
                                     <i class="fas fa-eraser"></i>
                                 </button>
                         </div>
+
+                        <br>
+                        <hr>
+                        <br>
                         <select class="state-picker" id="stateSelect"></select>
                         <script>
                             $('#stateSelect').hide(); //hides the whole element
@@ -533,7 +613,7 @@
                             });
 
                             $("#pickState").keyup(function(event) {
-                                // $('#stateSelect').show(); // I had to put show here because it wont show if its below
+                                //$('#stateSelect').show(); // I had to put show here because it wont show if its below
                                 populateStateSelect();
 
                             });
@@ -618,17 +698,18 @@
                 </div>
             </div>
         </div>
-        <!--     
-        ███████╗████████╗ █████╗ ████████╗███████╗    ███╗   ███╗ ██████╗ ██████╗  █████╗ ██╗         ██████╗ ███████╗ ██████╗ ██╗███╗   ██╗
-        ██╔════╝╚══██╔══╝██╔══██╗╚══██╔══╝██╔════╝    ████╗ ████║██╔═══██╗██╔══██╗██╔══██╗██║         ██╔══██╗██╔════╝██╔════╝ ██║████╗  ██║
-        ███████╗   ██║   ███████║   ██║   █████╗      ██╔████╔██║██║   ██║██║  ██║███████║██║         ██████╔╝█████╗  ██║  ███╗██║██╔██╗ ██║
-        ╚════██║   ██║   ██╔══██║   ██║   ██╔══╝      ██║╚██╔╝██║██║   ██║██║  ██║██╔══██║██║         ██╔══██╗██╔══╝  ██║   ██║██║██║╚██╗██║
-        ███████║   ██║   ██║  ██║   ██║   ███████╗    ██║ ╚═╝ ██║╚██████╔╝██████╔╝██║  ██║███████╗    ██████╔╝███████╗╚██████╔╝██║██║ ╚████║
-        ╚══════╝   ╚═╝   ╚═╝  ╚═╝   ╚═╝   ╚══════╝    ╚═╝     ╚═╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝    ╚═════╝ ╚══════╝ ╚═════╝ ╚═╝╚═╝  ╚═══╝ -->
-        <!-- City Modal -->
-        <!-- City Modal -->
-        <!-- City Modal -->
-        <div class="modal left fade" id="citiesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <!--
+    ███╗   ██╗███████╗ █████╗ ██████╗ ███████╗███████╗████████╗    ███╗   ██╗███████╗██╗ ██████╗ ██╗  ██╗██████╗  ██████╗ ██████╗ ███████╗
+    ████╗  ██║██╔════╝██╔══██╗██╔══██╗██╔════╝██╔════╝╚══██╔══╝    ████╗  ██║██╔════╝██║██╔════╝ ██║  ██║██╔══██╗██╔═══██╗██╔══██╗██╔════╝
+    ██╔██╗ ██║█████╗  ███████║██████╔╝█████╗  ███████╗   ██║       ██╔██╗ ██║█████╗  ██║██║  ███╗███████║██████╔╝██║   ██║██████╔╝███████╗
+    ██║╚██╗██║██╔══╝  ██╔══██║██╔══██╗██╔══╝  ╚════██║   ██║       ██║╚██╗██║██╔══╝  ██║██║   ██║██╔══██║██╔══██╗██║   ██║██╔══██╗╚════██║
+    ██║ ╚████║███████╗██║  ██║██║  ██║███████╗███████║   ██║       ██║ ╚████║███████╗██║╚██████╔╝██║  ██║██████╔╝╚██████╔╝██║  ██║███████║
+    ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝       ╚═╝  ╚═══╝╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚══════╝
+                                                                                                                                           -->
+        <!-- NearNeighbors  Button -->
+        <!-- NearNeighbors  Button -->
+        <!-- NearNeighbors  Button -->
+        <div class="modal left fade" id="nearestNeighbors" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -636,40 +717,71 @@
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         <h4 class="modal-title" id="myModalLabel">
-                            <i class="far fa-building"></i> &nbsp;Display States
+                            <i class="fas fa-user-friends"></i> &nbsp;Nearest Neighbor
                         </h4>
                     </div>
                     <div class="modal-body">
-                        <input type="text" id="pickState">
-                        <select class="state-picker" id="stateSelect">
-                                -->
-                            </select>
+                        <hr>
+                        <br>
+                        <!-- enter lng/lat -->
+                        <div style="vertical-align:top;">
+                            <p style="font-size: 12px">
+                                <i class="fas fa-map-marked-alt"></i> Enter Coordinates
+                            </p>
+                            <input type="number" id="lngInput2" style="font-size: 11px; padding: 2px; margin:2px" placeholder="longitude">
+                            <br>
+                            <input type="number" id="latInput2" style="font-size: 11px; padding: 2px; margin:2px" placeholder="latitude">
+                            <br>
+                            <input type="number" id="nearest" style="font-size: 11px; padding: 2px; margin:2px" placeholder="nearest">
+                            <br>
+                            <div style="padding-top:10px">
+                                <button class="clickable" type="submit" id="findNearest" style="font-size: 10px;">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                                <button class="clickable" type="submit" id="clearNearest" style="font-size: 10px;">
+                                    <i class="fas fa-eraser"></i>
+                                </button>
+
+                            </div>
+                            <br>
+                            <hr>
+                            <br>
+                            <!-- SAVING DATA TO JSON AND RELOADING POINTS FROM JSON-->
+                            <p style="font-size: 12px"><i class="far fa-save"></i> Save To JSON </p>
+                            <div style="padding-top:10px">
+                                <input type="button" value="save" id="saveJSONButton2" style="font-size: 10px;">
+
+                            </div>
+                            <br />
+                            <hr>
+                            <br />
+                            <p style="font-size: 12px"><i class="fas fa-download"></i> Load From JSON </p>
+                            <div style="padding-top:10px">
+                                <input type="button" value="load" id="loadJSONButton2" style="font-size: 10px;">
+                            </div>
+                            <br />
+                            <hr>
+                            <br />
+                        </div>
+
+                        </script>
+                        <br>
+                        <hr>
+                        <br>
                         <script>
-                            $("#pickState").keyup(function(event) {
-                                $('#stateSelect').show(); // I had to put show here because it wont show if its below
-                                populateStateSelect();
-
-                            });
-
-                            function populateStateSelect() {
-                                let filter = $("#pickState").val();
-
-                                let html = '';
-                                $.get("http://localhost:8080/states?filter=" + filter, function(data) {
-
-                                    console.log(data);
-                                    for (var i = 0; i < data['count']; i++) {
-                                        html += '<option>' + data['results'][i].name + '</option>';
-                                    }
-                                    $('#stateSelect').attr("size", data['count']);
-                                    $('#stateSelect').html(html);
-                                });
-                            }
                         </script>
                     </div>
                 </div>
             </div>
         </div>
+        <!--         
+                    ██╗      ██████╗  ██████╗ █████╗ ████████╗██╗ ██████╗ ███╗   ██╗    ████████╗ ██████╗  ██████╗ ██╗     
+                    ██║     ██╔═══██╗██╔════╝██╔══██╗╚══██╔══╝██║██╔═══██╗████╗  ██║    ╚══██╔══╝██╔═══██╗██╔═══██╗██║     
+                    ██║     ██║   ██║██║     ███████║   ██║   ██║██║   ██║██╔██╗ ██║       ██║   ██║   ██║██║   ██║██║     
+                    ██║     ██║   ██║██║     ██╔══██║   ██║   ██║██║   ██║██║╚██╗██║       ██║   ██║   ██║██║   ██║██║     
+                    ███████╗╚██████╔╝╚██████╗██║  ██║   ██║   ██║╚██████╔╝██║ ╚████║       ██║   ╚██████╔╝╚██████╔╝███████╗
+                    ╚══════╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝       ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝             -->
+
         <!-- Location Modal -->
         <!-- Location Modal -->
         <!-- Location Modal -->
@@ -700,6 +812,7 @@
                                 <input type="button" value="find" id="findLLButton" style="font-size: 10px;">
                                 <input type="button" value="clear" id="findLLButtonClear" style="font-size: 10px;">
                             </div>
+
                         </div>
                         <br>
                         <hr>
@@ -722,6 +835,22 @@
                         <br>
                         <hr>
                         <br>
+                        <!-- SAVING DATA TO JSON AND RELOADING POINTS FROM JSON-->
+                        <p style="font-size: 12px"><i class="far fa-save"></i> Save To JSON </p>
+                        <div style="padding-top:10px">
+                            <input type="button" value="save" id="saveJSONButton" style="font-size: 10px;">
+
+                        </div>
+                        <br />
+                        <hr>
+                        <br />
+                        <p style="font-size: 12px"><i class="fas fa-download"></i> Load From JSON </p>
+                        <div style="padding-top:10px">
+                            <input type="button" value="load" id="loadJSONButton" style="font-size: 10px;">
+                        </div>
+                        <br />
+                        <hr>
+                        <br />
                     </div>
                 </div>
             </div>

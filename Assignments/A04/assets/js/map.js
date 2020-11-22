@@ -117,49 +117,386 @@ map.on('load', function() {
         //clear
         $('#findLLButtonClear').click(function() {
 
-            map.removeLayer("enterLL");
-            map.removeSource("enterLL");
-
-            if (map.getLayer("enterLL")) {
-                map.removeLayer("enterLL");
-                map.removeSource("enterLL");
-            }
+            clearFirstPointLayer()
+            map.flyTo({
+                center: [0, 0]
+            });
 
         });
+        //first point clearing ------------------------------------------------
+        function clearFirstPointLayer() {
+            $.getJSON("http://localhost:8080/pointErased")
+                .done(function(pointsJSON) {
+                    console.log(pointsJSON)
+                    for (var i = 0; i < pointsJSON['0']; i++) {
+                        map.removeLayer(pointsJSON['1'][i].properties.source);
+                        map.removeSource(pointsJSON['1'][i].properties.source);
 
+                        if (map.getLayer(pointsJSON['1'][i].properties.source)) {
+                            map.removeLayer(pointsJSON['1'][i].properites.source);
+                            map.removeSource(pointsJSON['1'][i].properites.source);
+                        }
+                    }
+                })
+        };
+        // first circle function ----------------------------------------------
+        function FirstPointLayer(pointID, pointInfo) {
+            map.addSource(pointID, {
+                type: 'geojson',
+                data: pointInfo
+            });
+            map.addLayer({
+                id: pointID,
+                type: 'circle',
+                source: pointID,
+                layout: {},
+                paint: {
+                    "circle-color": 'red',
+                    "circle-radius": 8,
+                },
+            });
+        };
         //create
         $('#findLLButton').click(function() {
 
             var enterLng = +document.getElementById('lngInput').value
             var enterLat = +document.getElementById('latInput').value
 
+
+            // geojson feautre object
+
             var enterLL = turf.point([enterLng, enterLat]);
 
-            map.addSource('enterLL', {
+
+            //localhost:8080/pointSaved?lon=-82.1888889&lat=36.595
+            $.getJSON("http://localhost:8080/pointSaved?lon=" + enterLng + "&lat=" + enterLat)
+                .done(function(coord) {
+                    var pointID = coord.toString()
+                    FirstPointLayer(pointID, enterLL)
+
+
+                    map.flyTo({
+                        center: [enterLng, enterLat]
+                    });
+                });
+
+
+        });
+        // for save to json file --- added 10/20/2020
+        $('#saveJSONButton').click(function() {
+            $.getJSON("http://localhost:8080/jsonSavedFront")
+                .done(function(returned) {
+                    if (parseInt(returned)) {
+                        console.log("Saved to savedpoint.geojson")
+                    } else {
+                        console.log("File could not save")
+                    }
+                })
+        })
+
+        function runSourceLayer(pointID, pointData) {
+            map.addSource("Nearneighbors" + pointID, {
                 type: 'geojson',
-                data: enterLL
+                data: pointData
             });
 
             map.addLayer({
-                id: 'enterLL',
+                id: "Nearneighbors" + pointID,
                 type: 'circle',
-                source: 'enterLL',
-                layout: {
-
-                },
+                source: "Nearneighbors" + pointID,
+                layout: {},
                 paint: {
-                    "circle-color": 'red',
+                    "circle-color": 'blue',
                     "circle-radius": 8,
                 },
             });
+        };
 
-            map.flyTo({
-                center: [enterLng, enterLat]
+        // loads json file --- added 10/20/2020
+        // and centers the points added to map
+        $('#loadJSONButton').click(function() {
+            $.getJSON("http://localhost:8080/reload")
+                .done(function(json) {
+                    console.log(json)
+                    var zoomlng = 0,
+                        zoomlat = 0
+                    for (var i = 0; i < json['0']; i++) {
+                        runSourceLayer(json['1'][i].properties.source, json['1'][i])
+                        zoomlng += json['1'][i].geometry.coordinates[0]
+                        zoomlat += json['1'][i].geometry.coordinates[1]
+                    }
+                    map.flyTo({
+                        center: [zoomlng / json['0'], zoomlat / json['0']]
+                    });
+
+                })
+
+        })
+
+
+    });
+});
+//creating a new layer ? to se
+//if i can use it to upload points-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
+map.on('load', function() {
+    //DataSets layer
+    map.addSource('ufo', { type: 'geojson', data: emptyGJ });
+    map.addLayer({
+        "id": "ufo",
+        "type": "circle",
+        "source": "ufo",
+        "layout": {
+            "visibility": 'none'
+        },
+        "paint": {
+            "circle-color": 'green',
+            "circle-radius": 8
+        }
+    });
+
+    map.addSource('railroads', { type: 'geojson', data: emptyGJ });
+    map.addLayer({
+        "id": "railroads",
+        "type": "circle",
+        "source": "railroads",
+        "layout": {
+            "visibility": 'none'
+        },
+        "paint": {
+            "circle-color": 'purple',
+            "circle-radius": 8
+        }
+    });
+    map.addSource('earthquakes', { type: 'geojson', data: emptyGJ });
+    map.addLayer({
+        "id": "earthquakes",
+        "type": "circle",
+        "source": "earthquakes",
+        "layout": {
+            "visibility": 'none'
+        },
+        "paint": {
+            "circle-color": 'orange',
+            "circle-radius": 8
+        }
+    });
+})
+var layers =
+
+    [{
+            'name': 'ufo',
+            'id': 'ufo',
+            'source': 'ufo',
+            'path': '/Users/Delly/Desktop/NewEnv/5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data/fixed_ufos.geojson',
+            'directory': 'Dataset',
+        }, {
+            'name': 'railroads',
+            'id': 'railroads',
+            'source': 'railroads',
+            'path': 'https://geo.dot.gov/server/rest/services/Hosted/North_American_Rail_Lines_DS/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&f=json', //'/Users/Delly/Desktop/NewEnv/5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data/us_railroads.geojson',
+            'directory': 'Dataset',
+        },
+        {
+            'name': 'earthquakes',
+            'id': 'earthquakes',
+            'source': 'earthquakes',
+            'path': '/Users/Delly/Desktop/NewEnv/5443-Spatial-DS-Augustine/Assignments/A04/assets/api/data/earthquake_2020_7.json',
+            'directory': 'Dataset',
+        }
+    ];
+map.addControl(new LayerTree({
+    layers: layers,
+    onClickLoad: true
+}), 'bottom-left');
+
+// ███╗   ██╗███████╗ █████╗ ██████╗ ███████╗███████╗████████╗    ███╗   ██╗███████╗██╗ ██████╗ ██╗  ██╗██████╗  ██████╗ ██████╗ 
+// ████╗  ██║██╔════╝██╔══██╗██╔══██╗██╔════╝██╔════╝╚══██╔══╝    ████╗  ██║██╔════╝██║██╔════╝ ██║  ██║██╔══██╗██╔═══██╗██╔══██╗
+// ██╔██╗ ██║█████╗  ███████║██████╔╝█████╗  ███████╗   ██║       ██╔██╗ ██║█████╗  ██║██║  ███╗███████║██████╔╝██║   ██║██████╔╝
+// ██║╚██╗██║██╔══╝  ██╔══██║██╔══██╗██╔══╝  ╚════██║   ██║       ██║╚██╗██║██╔══╝  ██║██║   ██║██╔══██║██╔══██╗██║   ██║██╔══██╗
+// ██║ ╚████║███████╗██║  ██║██║  ██║███████╗███████║   ██║       ██║ ╚████║███████╗██║╚██████╔╝██║  ██║██████╔╝╚██████╔╝██║  ██║
+// ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝       ╚═╝  ╚═══╝╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝
+
+
+// NEAREST NEIGHBOR
+map.on('load', function() {
+    $(document).ready(function() {
+
+        function runSourceLayer(pointID, pointData) {
+            map.addSource("Nearneighbors" + pointID, {
+                type: 'geojson',
+                data: pointData
             });
+
+            map.addLayer({
+                id: "Nearneighbors" + pointID,
+                type: 'circle',
+                source: "Nearneighbors" + pointID,
+                layout: {},
+                paint: {
+                    "circle-color": 'blue',
+                    "circle-radius": 8,
+                },
+            });
+        };
+
+        function clearSourceLayer() {
+
+            $.getJSON("http://localhost:8080/pointErased")
+                .done(function(numErased) {
+                    var numQ = parseInt(numErased)
+                    for (var i = 0; i < numQ; ++i) {
+                        var qNum = i.toString()
+                        console.log("Deleting ", qNum)
+                        map.removeLayer("Nearneighbors" + qNum);
+                        map.removeSource("Nearneighbors" + qNum);
+
+                        if (map.getLayer("Nearneighbors" + qNum)) {
+                            map.removeLayer("Nearneighbors" + qNum);
+                            map.removeSource("Nearneighbors" + qNum);
+                        }
+                    }
+                })
+        };
+        $('#findNearest').click(function() {
+            // var selectedDatasets = chooseDataset()
+            // var selectQueryType = chooseQueryType()
+
+            // gets values
+            var enterLng = +document.getElementById('lngInput2').value
+            var enterLat = +document.getElementById('latInput2').value
+            var num = +document.getElementById('nearest').value
+
+            // creates a geojson feature 
+            var enterLL = { "geojson": turf.point([enterLng, enterLat]) }
+
+            $.getJSON("http://localhost:8080/pointSaved?lon=" + enterLng + "&lat=" + enterLat)
+                // makes a call to the backend to save the feature object in a
+                //      feature collection
+            $.getJSON("http://localhost:8080/neighbor?lon=" + enterLng + "&lat=" + enterLat + "&num=" + num, function(geojson) {
+                console.log(geojson);
+
+                // var pointID = json[0][1].toString()
+                // loadLayers(pointID, enterLL)
+
+                $.getJSON("http://localhost:8080/pointSaved?lon=" + enterLng + "&lat=" + enterLat)
+
+
+            });
+            // loadLayers(json)
+            //localhost:8080/pointSaved?lon=-82.1888889&lat=36.595
+
+            // for save to json file --- added 10/20/2020
+            $('#saveJSONButton2').click(function() {
+                $.getJSON("http://localhost:8080/jsonSavedFront")
+                    .done(function(returned) {
+                        if (parseInt(returned)) {
+                            console.log("Saved to savedpoint.geojson")
+                        } else {
+                            console.log("File could not save")
+                        }
+                    })
+            })
+
+            // loads json file --- added 10/20/2020
+            // and centers the points added to map
+            $('#reloadJSONButton2').click(function() {
+                $.getJSON("http://localhost:8080/reload")
+                    .done(function(json) {
+                        console.log(json)
+                        var zoomlng = 0,
+                            zoomlat = 0
+                        for (var i = 0; i < json['0']; i++) {
+                            runSourceLayer(json['1'][i].properties.source, json['1'][i])
+                            zoomlng += json['1'][i].geometry.coordinates[0]
+                            zoomlat += json['1'][i].geometry.coordinates[1]
+                        }
+                        map.flyTo({
+                            center: [zoomlng / json['0'], zoomlat / json['0']]
+                        });
+                    })
+
+            })
 
         });
     });
 });
+// ██╗   ██╗██████╗ ██╗      ██████╗  █████╗ ██████╗      ██████╗ ███████╗ ██████╗      ██╗███████╗ ██████╗ ███╗   ██╗    
+// ██║   ██║██╔══██╗██║     ██╔═══██╗██╔══██╗██╔══██╗    ██╔════╝ ██╔════╝██╔═══██╗     ██║██╔════╝██╔═══██╗████╗  ██║    
+// ██║   ██║██████╔╝██║     ██║   ██║███████║██║  ██║    ██║  ███╗█████╗  ██║   ██║     ██║███████╗██║   ██║██╔██╗ ██║    
+// ██║   ██║██╔═══╝ ██║     ██║   ██║██╔══██║██║  ██║    ██║   ██║██╔══╝  ██║   ██║██   ██║╚════██║██║   ██║██║╚██╗██║    
+// ╚██████╔╝██║     ███████╗╚██████╔╝██║  ██║██████╔╝    ╚██████╔╝███████╗╚██████╔╝╚█████╔╝███████║╚██████╔╝██║ ╚████║    
+//  ╚═════╝ ╚═╝     ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝      ╚═════╝ ╚══════╝ ╚═════╝  ╚════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝    
+
+
+
+map.on('load', function() {
+
+    $(document).ready(function() {
+
+
+        function loadLayer(pointID, pointData) {
+            map.addSource(pointID, {
+                type: 'geojson',
+                data: pointData
+            });
+            // update this to change the layer type to whatever is in the geojson file
+            //  submitted on the frontend
+            map.addLayer({
+                id: pointID,
+                type: 'circle',
+                source: pointID,
+                layout: {},
+                paint: {
+                    "circle-color": 'green',
+                    "circle-radius": 8,
+                },
+            });
+        };
+
+
+        function clearSourceLayer() {
+            // this is a call to the backend. It will feed the frontend
+            //      a key-value pair where the key is an integer equal to
+            //      to the number of feature objects to erase from the map,
+            //      and the value is an array of all the feature objects to
+            //      be removed.
+            if (map.getLayer("showGeoJ")) {
+                map.removeLayer("showGeoJ");
+                map.removeSource("showGeoJ");
+            }
+        };
+
+        //clear geojson
+        $('#clearGeoJ').click(function() {
+            console.log("clearGeoJ was pressed")
+            clearSourceLayer()
+                // adjusts the map view to be centered on lng=0,lat=0
+            map.flyTo({
+                center: [0, 0]
+            });
+        });
+
+        //display geojson
+        $('#submitGeoJ').click(function() {
+            console.log("submitGeoJ was pressed")
+                // grabs the number input from the lngInput-latInput fields
+            var paste_geojson = JSON.parse(document.getElementById('geoJSONtextBox').value)
+                // console.log(submitted_geojson)
+            clearSourceLayer()
+            loadLayer("showGeoJ", paste_geojson)
+            map.flyTo({
+                center: [0, 0]
+            });
+        });
+    });
+});
+
+//  ██████╗ ██████╗  ██████╗ ██████╗ ██████╗ ██╗███╗   ██╗ █████╗ ████████╗███████╗███████╗    ████████╗ ██████╗  ██████╗ ██╗          ██████╗ ██████╗ ██████╗ ███████╗
+// ██╔════╝██╔═══██╗██╔═══██╗██╔══██╗██╔══██╗██║████╗  ██║██╔══██╗╚══██╔══╝██╔════╝██╔════╝    ╚══██╔══╝██╔═══██╗██╔═══██╗██║         ██╔════╝██╔═══██╗██╔══██╗██╔════╝
+// ██║     ██║   ██║██║   ██║██████╔╝██║  ██║██║██╔██╗ ██║███████║   ██║   █████╗  ███████╗       ██║   ██║   ██║██║   ██║██║         ██║     ██║   ██║██║  ██║█████╗  
+// ██║     ██║   ██║██║   ██║██╔══██╗██║  ██║██║██║╚██╗██║██╔══██║   ██║   ██╔══╝  ╚════██║       ██║   ██║   ██║██║   ██║██║         ██║     ██║   ██║██║  ██║██╔══╝  
+// ╚██████╗╚██████╔╝╚██████╔╝██║  ██║██████╔╝██║██║ ╚████║██║  ██║   ██║   ███████╗███████║       ██║   ╚██████╔╝╚██████╔╝███████╗    ╚██████╗╚██████╔╝██████╔╝███████╗
+//  ╚═════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚══════╝       ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝     ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝
 
 // Coordinates Tool
 // Coordinates Tool
@@ -168,6 +505,15 @@ map.on(touchEvent, function(e) {
     document.getElementById('info').innerHTML =
         JSON.stringify(e.lngLat, function(key, val) { return val.toFixed ? Number(val.toFixed(4)) : val; }).replace('{"lng":', '').replace('"lat":', ' ').replace('}', '')
 });
+
+
+// ██╗      █████╗ ██╗   ██╗███████╗██████╗ ███████╗    ████████╗ ██████╗  ██████╗ ██╗          ██████╗ ██████╗ ██████╗ ███████╗    
+// ██║     ██╔══██╗╚██╗ ██╔╝██╔════╝██╔══██╗██╔════╝    ╚══██╔══╝██╔═══██╗██╔═══██╗██║         ██╔════╝██╔═══██╗██╔══██╗██╔════╝    
+// ██║     ███████║ ╚████╔╝ █████╗  ██████╔╝███████╗       ██║   ██║   ██║██║   ██║██║         ██║     ██║   ██║██║  ██║█████╗      
+// ██║     ██╔══██║  ╚██╔╝  ██╔══╝  ██╔══██╗╚════██║       ██║   ██║   ██║██║   ██║██║         ██║     ██║   ██║██║  ██║██╔══╝      
+// ███████╗██║  ██║   ██║   ███████╗██║  ██║███████║       ██║   ╚██████╔╝╚██████╔╝███████╗    ╚██████╗╚██████╔╝██████╔╝███████╗    
+// ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝       ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝     ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝    
+
 
 //Layer Tree
 //Layer Tree
@@ -376,272 +722,340 @@ map.on('load', function() {
         },
     });
 
-    //Layer Info function
-    //Layer Info function
-    //Layer Info function
-    //Layer Info function
-    map.on(touchEvent, function(e) {
 
-        document.getElementById("layer-attribute").innerHTML = "";
-
-    });
-
-    map.on(touchEvent, function(e) {
-
-        var popup = new mapboxgl.Popup();
-        var feature;
-        var append = document.getElementById('layer-attribute');
-
-        //Cultural - Layer Info
-        //Cultural - Layer Info
-
-        if (map.queryRenderedFeatures(e.point, { layers: ['populated'] }).length) {
-
-            feature = map.queryRenderedFeatures(e.point, { layers: ['populated'] })[0];
-
-            append.innerHTML +=
-                '<h5>Populated Places</h5>' +
-                '<hr>' +
-                '<b>City: </b>' + feature.properties.name +
-                '<hr>' +
-                '<b>Country: </b>' + feature.properties.sov0name +
-                '<hr>'
-        }
-
-        if (map.queryRenderedFeatures(e.point, { layers: ['country'] }).length) {
-
-            feature = map.queryRenderedFeatures(e.point, { layers: ['country'] })[0];
-
-            append.innerHTML +=
-                '<h5>Country</h5>' +
-                '<hr>' +
-                '<b>Port Name </b>' + feature.properties.admin +
-                '<hr>' +
-                '<b>Code: </b>' + feature.properties.adm0_a3 +
-                '<hr>'
-        }
-
-        //Monster - Layer Info
-        //Monster - Layer Info
-        if (map.queryRenderedFeatures(e.point, { layers: ['monster'] }).length) {
-
-            feature = map.queryRenderedFeatures(e.point, { layers: ['monster'] })[0];
-
-            append.innerHTML +=
-                '<h5>Monster Info</h5>' +
-                '<hr>' +
-                '<b>Name: </b>' + 'Mr. Claw' +
-                '<hr>' +
-                '<b>Place of Birth: </b>' + 'Atlantic Ocean' +
-                '<hr>' +
-                '<b>Likes: </b>' + 'Birthday Parties' +
-                '<hr>' +
-                '<b>Dislikes: </b>' + 'Seafood Festivals' +
-                '<hr>'
-        }
-
-        //Monster - Layer Info
-        //Monster - Layer Info
-        if (map.queryRenderedFeatures(e.point, { layers: ['octo'] }).length) {
-
-            feature = map.queryRenderedFeatures(e.point, { layers: ['octo'] })[0];
-
-            append.innerHTML +=
-                '<h5>Monster Info</h5>' +
-                '<hr>' +
-                '<b>Name: </b>' + 'Mr. Octo' +
-                '<hr>' +
-                '<b>Place of Birth: </b>' + 'Pacific Ocean' +
-                '<hr>' +
-                '<b>Likes: </b>' + 'Big Salads' +
-                '<hr>' +
-                '<b>Dislikes: </b>' + 'Jules Verne' +
-                '<hr>'
-        }
-
-
-        //Physical - Layer Info
-        //Physical  - Layer Info
-        if (map.queryRenderedFeatures(e.point, { layers: ['ocean'] }).length) {
-
-            feature = map.queryRenderedFeatures(e.point, { layers: ['ocean'] })[0];
-
-            append.innerHTML +=
-                '<h5>Oceans</h5>' +
-                '<hr>' +
-                '<b>Name: </b>' + feature.properties.name +
-                '<hr>'
-        }
-
-        if (map.queryRenderedFeatures(e.point, { layers: ['river'] }).length) {
-
-            feature = map.queryRenderedFeatures(e.point, { layers: ['river'] })[0];
-
-            append.innerHTML +=
-                '<h5>Major Rivers</h5>' +
-                '<hr>' +
-                '<b>Name: </b>' + feature.properties.name +
-                '<hr>'
-        }
-    });
-
-    //cursor = pointer on hover configuration
-    map.on('mousemove', function(e) {
-        var features = map.queryRenderedFeatures(e.point, {
-            layers: ['ocean', 'river', 'country', 'populated', 'monster', 'octo']
-        });
-        map.getCanvas().style.cursor = (features.length) ? 'default' : '';
-    });
-
-    //Highlight Features Function
-    //Highlight Features Function
-    //Highlight Features Function
-    //Highlight Features Function
-    map.on(touchEvent, function(e) {
-        var features = map.queryRenderedFeatures(e.point, { layers: ["populated"] });
-
-        if (map.getLayer("populated_hl")) {
-            map.removeLayer("populated_hl");
-        }
-
-        if (features.length) {
-
-            map.addLayer({
-                "id": "populated_hl",
-                "type": "circle",
-                "source": "populated",
-                "layout": {},
-                "paint": {
-                    "circle-color": "cyan",
-                    "circle-radius": 7
-                },
-                "filter": ["==", "name", features[0].properties.name],
-            });
-        }
-    });
-
-    map.on(touchEvent, function(e) {
-        var features = map.queryRenderedFeatures(e.point, { layers: ["country"] });
-
-        if (map.getLayer("country_hl")) {
-            map.removeLayer("country_hl");
-        }
-
-        if (features.length) {
-
-            map.addLayer({
-                "id": "country_hl",
-                "type": "line",
-                "source": "country",
-                "layout": {},
-                "paint": {
-                    "line-color": "cyan",
-                    "line-width": 3
-                },
-                "filter": ["==", "sovereignt", features[0].properties.sovereignt],
-            });
-        }
-    });
-
-    //Highlight - Mr. Claw
-    map.on(touchEvent, function(e) {
-        var features = map.queryRenderedFeatures(e.point, { layers: ["monster"] });
-
-        if (map.getLayer("monster_hl")) {
-            map.removeLayer("monster_hl");
-        }
-
-        if (features.length) {
-
-            map.addLayer({
-                "id": "monster_hl",
-                "type": "line",
-                "source": "monster",
-                "layout": {},
-                "paint": {
-                    "line-color": "cyan",
-                    "line-width": 3
-                },
-                "filter": ["==", "Id", features[0].properties.Id],
-            });
-        }
-    });
-
-    //Highlight - Mr. Octo
-    map.on(touchEvent, function(e) {
-        var features = map.queryRenderedFeatures(e.point, { layers: ["octo"] });
-
-        if (map.getLayer("octo_hl")) {
-            map.removeLayer("octo_hl");
-        }
-
-        if (features.length) {
-
-            map.addLayer({
-                "id": "octo_hl",
-                "type": "line",
-                "source": "octo",
-                "layout": {},
-                "paint": {
-                    "line-color": "cyan",
-                    "line-width": 3
-                },
-                "filter": ["==", "Id", features[0].properties.Id],
-            });
-        }
-    });
-
-    //Highlight - Physical
-    map.on(touchEvent, function(e) {
-        var features = map.queryRenderedFeatures(e.point, { layers: ["river"] });
-
-        if (map.getLayer("river_hl")) {
-            map.removeLayer("river_hl");
-        }
-
-        if (features.length) {
-
-            map.addLayer({
-                "id": "river_hl",
-                "type": "line",
-                "source": "river",
-                "layout": {},
-                "paint": {
-                    "line-color": "cyan",
-                    "line-width": 4
-                },
-                "filter": ["==", "name", features[0].properties.name],
-            });
-        }
-    });
-
-    map.on(touchEvent, function(e) {
-        var features = map.queryRenderedFeatures(e.point, { layers: ["ocean"] });
-
-        if (map.getLayer("ocean_hl")) {
-            map.removeLayer("ocean_hl");
-        }
-
-        if (features.length) {
-
-            map.addLayer({
-                "id": "ocean_hl",
-                "type": "line",
-                "source": "ocean",
-                "layout": {},
-                "paint": {
-                    "line-color": "cyan",
-                    "line-width": 3
-                },
-                "filter": ["==", "name", features[0].properties.name],
-            });
-        }
-    });
 });
+
+// ██╗███╗   ██╗███████╗ ██████╗     ██╗███╗   ██╗    ██╗      █████╗ ██╗   ██╗███████╗██████╗ ███████╗    
+// ██║████╗  ██║██╔════╝██╔═══██╗    ██║████╗  ██║    ██║     ██╔══██╗╚██╗ ██╔╝██╔════╝██╔══██╗██╔════╝    
+// ██║██╔██╗ ██║█████╗  ██║   ██║    ██║██╔██╗ ██║    ██║     ███████║ ╚████╔╝ █████╗  ██████╔╝███████╗    
+// ██║██║╚██╗██║██╔══╝  ██║   ██║    ██║██║╚██╗██║    ██║     ██╔══██║  ╚██╔╝  ██╔══╝  ██╔══██╗╚════██║    
+// ██║██║ ╚████║██║     ╚██████╔╝    ██║██║ ╚████║    ███████╗██║  ██║   ██║   ███████╗██║  ██║███████║    
+// ╚═╝╚═╝  ╚═══╝╚═╝      ╚═════╝     ╚═╝╚═╝  ╚═══╝    ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝    
+
+
+//Layer Info function
+//Layer Info function
+//Layer Info function
+//Layer Info function
+map.on(touchEvent, function(e) {
+
+    document.getElementById("layer-attribute").innerHTML = "";
+
+});
+
+map.on(touchEvent, function(e) {
+
+    var popup = new mapboxgl.Popup();
+    var feature;
+    var append = document.getElementById('layer-attribute');
+
+    //Cultural - Layer Info
+    //Cultural - Layer Info
+
+    if (map.queryRenderedFeatures(e.point, { layers: ['populated'] }).length) {
+
+        feature = map.queryRenderedFeatures(e.point, { layers: ['populated'] })[0];
+
+        append.innerHTML +=
+            '<h5>Populated Places</h5>' +
+            '<hr>' +
+            '<b>City: </b>' + feature.properties.name +
+            '<hr>' +
+            '<b>Country: </b>' + feature.properties.sov0name +
+            '<hr>'
+    }
+
+    if (map.queryRenderedFeatures(e.point, { layers: ['country'] }).length) {
+
+        feature = map.queryRenderedFeatures(e.point, { layers: ['country'] })[0];
+
+        append.innerHTML +=
+            '<h5>Country</h5>' +
+            '<hr>' +
+            '<b>Port Name </b>' + feature.properties.admin +
+            '<hr>' +
+            '<b>Code: </b>' + feature.properties.adm0_a3 +
+            '<hr>'
+    }
+
+    //Monster - Layer Info
+    //Monster - Layer Info
+    if (map.queryRenderedFeatures(e.point, { layers: ['monster'] }).length) {
+
+        feature = map.queryRenderedFeatures(e.point, { layers: ['monster'] })[0];
+
+        append.innerHTML +=
+            '<h5>Monster Info</h5>' +
+            '<hr>' +
+            '<b>Name: </b>' + 'Mr. Claw' +
+            '<hr>' +
+            '<b>Place of Birth: </b>' + 'Atlantic Ocean' +
+            '<hr>' +
+            '<b>Likes: </b>' + 'Birthday Parties' +
+            '<hr>' +
+            '<b>Dislikes: </b>' + 'Seafood Festivals' +
+            '<hr>'
+    }
+
+    //Monster - Layer Info
+    //Monster - Layer Info
+    if (map.queryRenderedFeatures(e.point, { layers: ['octo'] }).length) {
+
+        feature = map.queryRenderedFeatures(e.point, { layers: ['octo'] })[0];
+
+        append.innerHTML +=
+            '<h5>Monster Info</h5>' +
+            '<hr>' +
+            '<b>Name: </b>' + 'Mr. Octo' +
+            '<hr>' +
+            '<b>Place of Birth: </b>' + 'Pacific Ocean' +
+            '<hr>' +
+            '<b>Likes: </b>' + 'Big Salads' +
+            '<hr>' +
+            '<b>Dislikes: </b>' + 'Jules Verne' +
+            '<hr>'
+    }
+
+
+    //Physical - Layer Info
+    //Physical  - Layer Info
+    if (map.queryRenderedFeatures(e.point, { layers: ['ocean'] }).length) {
+
+        feature = map.queryRenderedFeatures(e.point, { layers: ['ocean'] })[0];
+
+        append.innerHTML +=
+            '<h5>Oceans</h5>' +
+            '<hr>' +
+            '<b>Name: </b>' + feature.properties.name +
+            '<hr>'
+    }
+
+    if (map.queryRenderedFeatures(e.point, { layers: ['river'] }).length) {
+
+        feature = map.queryRenderedFeatures(e.point, { layers: ['river'] })[0];
+
+        append.innerHTML +=
+            '<h5>Major Rivers</h5>' +
+            '<hr>' +
+            '<b>Name: </b>' + feature.properties.name +
+            '<hr>'
+    }
+
+
+
+    //    ██╗   ██╗███████╗ ██████╗     ██╗███╗   ██╗███████╗ ██████╗ 
+    //    ██║   ██║██╔════╝██╔═══██╗    ██║████╗  ██║██╔════╝██╔═══██╗
+    //    ██║   ██║█████╗  ██║   ██║    ██║██╔██╗ ██║█████╗  ██║   ██║
+    //    ██║   ██║██╔══╝  ██║   ██║    ██║██║╚██╗██║██╔══╝  ██║   ██║
+    //    ╚██████╔╝██║     ╚██████╔╝    ██║██║ ╚████║██║     ╚██████╔╝
+    //     ╚═════╝ ╚═╝      ╚═════╝     ╚═╝╚═╝  ╚═══╝╚═╝      ╚═════╝ 
+
+
+
+
+    if (map.queryRenderedFeatures(e.point, { layers: ['ufo'] }).length) {
+
+        feature = map.queryRenderedFeatures(e.point, { layers: ['ufo'] })[0];
+
+        append.innerHTML +=
+            '<h5>UFO Sitings</h5>' +
+            '<hr>' +
+            '<b>City: </b>' + feature.properties.name +
+            '<hr>' +
+            '<b>Country: </b>' + feature.properties.sov0name +
+            '<hr>'
+    }
+});
+
+//cursor = pointer on hover configuration
+map.on('mousemove', function(e) {
+    var features = map.queryRenderedFeatures(e.point, {
+        layers: ['ocean', 'river', 'country', 'populated', 'monster', 'octo', 'ufo']
+    });
+    map.getCanvas().style.cursor = (features.length) ? 'default' : '';
+});
+
+//Highlight Features Function
+//Highlight Features Function
+//Highlight Features Function
+//Highlight Features Function
+map.on(touchEvent, function(e) {
+    var features = map.queryRenderedFeatures(e.point, { layers: ["populated"] });
+
+    if (map.getLayer("populated_hl")) {
+        map.removeLayer("populated_hl");
+    }
+
+    if (features.length) {
+
+        map.addLayer({
+            "id": "populated_hl",
+            "type": "circle",
+            "source": "populated",
+            "layout": {},
+            "paint": {
+                "circle-color": "cyan",
+                "circle-radius": 7
+            },
+            "filter": ["==", "name", features[0].properties.name],
+        });
+    }
+});
+
+
+map.on(touchEvent, function(e) {
+    var features = map.queryRenderedFeatures(e.point, { layers: ["country"] });
+
+    if (map.getLayer("country_hl")) {
+        map.removeLayer("country_hl");
+    }
+
+    if (features.length) {
+
+        map.addLayer({
+            "id": "country_hl",
+            "type": "line",
+            "source": "country",
+            "layout": {},
+            "paint": {
+                "line-color": "cyan",
+                "line-width": 3
+            },
+            "filter": ["==", "sovereignt", features[0].properties.sovereignt],
+        });
+    }
+});
+// ADDDEDDDD---------------------------------------------------------------------------
+map.on(touchEvent, function(e) {
+    var features = map.queryRenderedFeatures(e.point, { layers: ["ufo"] });
+
+    if (map.getLayer("ufo_h1")) {
+        map.removeLayer("ufo_h1");
+    }
+
+    if (features.length) {
+
+        map.addLayer({
+            "id": "ufo_h1",
+            "type": "circle",
+            "source": "ufo_h1",
+            "layout": {},
+            "paint": {
+                "circle-color": "cyan",
+                "circle-radius": 7
+            },
+            "filter": ["==", "country", features[0].properties.name],
+        });
+    }
+});
+//Highlight - Mr. Claw
+map.on(touchEvent, function(e) {
+    var features = map.queryRenderedFeatures(e.point, { layers: ["monster"] });
+
+    if (map.getLayer("monster_hl")) {
+        map.removeLayer("monster_hl");
+    }
+
+    if (features.length) {
+
+        map.addLayer({
+            "id": "monster_hl",
+            "type": "line",
+            "source": "monster",
+            "layout": {},
+            "paint": {
+                "line-color": "cyan",
+                "line-width": 3
+            },
+            "filter": ["==", "Id", features[0].properties.Id],
+        });
+    }
+});
+
+//Highlight - Mr. Octo
+map.on(touchEvent, function(e) {
+    var features = map.queryRenderedFeatures(e.point, { layers: ["octo"] });
+
+    if (map.getLayer("octo_hl")) {
+        map.removeLayer("octo_hl");
+    }
+
+    if (features.length) {
+
+        map.addLayer({
+            "id": "octo_hl",
+            "type": "line",
+            "source": "octo",
+            "layout": {},
+            "paint": {
+                "line-color": "cyan",
+                "line-width": 3
+            },
+            "filter": ["==", "Id", features[0].properties.Id],
+        });
+    }
+});
+
+//Highlight - Physical
+map.on(touchEvent, function(e) {
+    var features = map.queryRenderedFeatures(e.point, { layers: ["river"] });
+
+    if (map.getLayer("river_hl")) {
+        map.removeLayer("river_hl");
+    }
+
+    if (features.length) {
+
+        map.addLayer({
+            "id": "river_hl",
+            "type": "line",
+            "source": "river",
+            "layout": {},
+            "paint": {
+                "line-color": "cyan",
+                "line-width": 4
+            },
+            "filter": ["==", "name", features[0].properties.name],
+        });
+    }
+});
+
+map.on(touchEvent, function(e) {
+    var features = map.queryRenderedFeatures(e.point, { layers: ["ocean"] });
+
+    if (map.getLayer("ocean_hl")) {
+        map.removeLayer("ocean_hl");
+    }
+
+    if (features.length) {
+
+        map.addLayer({
+            "id": "ocean_hl",
+            "type": "line",
+            "source": "ocean",
+            "layout": {},
+            "paint": {
+                "line-color": "cyan",
+                "line-width": 3
+            },
+            "filter": ["==", "name", features[0].properties.name],
+        });
+    }
+});
+
 
 // Directory Options
 // Directory Options
 // Directory Options - open or closed by defualt (true/false)
+
+// ██████╗ ██╗██████╗ ███████╗ ██████╗████████╗ ██████╗ ██████╗ ██╗   ██╗    ██╗███╗   ██╗    ██╗      █████╗ ██╗   ██╗███████╗██████╗ ███████╗    ████████╗ ██████╗  ██████╗ ██╗     
+// ██╔══██╗██║██╔══██╗██╔════╝██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗╚██╗ ██╔╝    ██║████╗  ██║    ██║     ██╔══██╗╚██╗ ██╔╝██╔════╝██╔══██╗██╔════╝    ╚══██╔══╝██╔═══██╗██╔═══██╗██║     
+// ██║  ██║██║██████╔╝█████╗  ██║        ██║   ██║   ██║██████╔╝ ╚████╔╝     ██║██╔██╗ ██║    ██║     ███████║ ╚████╔╝ █████╗  ██████╔╝███████╗       ██║   ██║   ██║██║   ██║██║     
+// ██║  ██║██║██╔══██╗██╔══╝  ██║        ██║   ██║   ██║██╔══██╗  ╚██╔╝      ██║██║╚██╗██║    ██║     ██╔══██║  ╚██╔╝  ██╔══╝  ██╔══██╗╚════██║       ██║   ██║   ██║██║   ██║██║     
+// ██████╔╝██║██║  ██║███████╗╚██████╗   ██║   ╚██████╔╝██║  ██║   ██║       ██║██║ ╚████║    ███████╗██║  ██║   ██║   ███████╗██║  ██║███████║       ██║   ╚██████╔╝╚██████╔╝███████╗
+// ╚═════╝ ╚═╝╚═╝  ╚═╝╚══════╝ ╚═════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝   ╚═╝       ╚═╝╚═╝  ╚═══╝    ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝       ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝
+
+
 var directoryOptions = [{
         'name': 'Monsters',
         'open': true
@@ -652,6 +1066,10 @@ var directoryOptions = [{
     },
     {
         'name': 'Physical',
+        'open': true
+    },
+    {
+        'name': 'Dataset',
         'open': true
     },
 
@@ -768,6 +1186,8 @@ var layers =
             'path': 'https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_110m_geography_marine_polys.geojson',
             'directory': 'Physical',
         },
+
+
 
     ];
 
@@ -972,6 +1392,13 @@ function createMarker(e, el) {
         .addTo(map);
 }
 
+//  ██████╗ ██████╗ ██╗      ██████╗ ██████╗     ███████╗ ██████╗ ██████╗     ██████╗ ██████╗  █████╗ ██╗    ██╗    ████████╗ ██████╗  ██████╗ ██╗         
+// ██╔════╝██╔═══██╗██║     ██╔═══██╗██╔══██╗    ██╔════╝██╔═══██╗██╔══██╗    ██╔══██╗██╔══██╗██╔══██╗██║    ██║    ╚══██╔══╝██╔═══██╗██╔═══██╗██║         
+// ██║     ██║   ██║██║     ██║   ██║██████╔╝    █████╗  ██║   ██║██████╔╝    ██║  ██║██████╔╝███████║██║ █╗ ██║       ██║   ██║   ██║██║   ██║██║         
+// ██║     ██║   ██║██║     ██║   ██║██╔══██╗    ██╔══╝  ██║   ██║██╔══██╗    ██║  ██║██╔══██╗██╔══██║██║███╗██║       ██║   ██║   ██║██║   ██║██║         
+// ╚██████╗╚██████╔╝███████╗╚██████╔╝██║  ██║    ██║     ╚██████╔╝██║  ██║    ██████╔╝██║  ██║██║  ██║╚███╔███╔╝       ██║   ╚██████╔╝╚██████╔╝███████╗    
+//  ╚═════╝ ╚═════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═╝    ╚═╝      ╚═════╝ ╚═╝  ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚══╝╚══╝        ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝    
+
 //populates edit palette with user defined colors/sizes
 function populatePalette() {
     var palette = document.getElementById('customTextPalette');
@@ -999,6 +1426,14 @@ function populatePalette() {
         textColorDiv.appendChild(cElm);
     };
 }
+
+// ███████╗ ██████╗ ███╗   ██╗████████╗    ███████╗██╗███████╗███████╗     ██████╗██╗  ██╗ █████╗ ███╗   ██╗ ██████╗ ███████╗    ███████╗ ██████╗ ██████╗     ██████╗ ██████╗  █████╗ ██╗    ██╗    ████████╗ ██████╗  ██████╗ ██╗     
+// ██╔════╝██╔═══██╗████╗  ██║╚══██╔══╝    ██╔════╝██║╚══███╔╝██╔════╝    ██╔════╝██║  ██║██╔══██╗████╗  ██║██╔════╝ ██╔════╝    ██╔════╝██╔═══██╗██╔══██╗    ██╔══██╗██╔══██╗██╔══██╗██║    ██║    ╚══██╔══╝██╔═══██╗██╔═══██╗██║     
+// █████╗  ██║   ██║██╔██╗ ██║   ██║       ███████╗██║  ███╔╝ █████╗      ██║     ███████║███████║██╔██╗ ██║██║  ███╗█████╗      █████╗  ██║   ██║██████╔╝    ██║  ██║██████╔╝███████║██║ █╗ ██║       ██║   ██║   ██║██║   ██║██║     
+// ██╔══╝  ██║   ██║██║╚██╗██║   ██║       ╚════██║██║ ███╔╝  ██╔══╝      ██║     ██╔══██║██╔══██║██║╚██╗██║██║   ██║██╔══╝      ██╔══╝  ██║   ██║██╔══██╗    ██║  ██║██╔══██╗██╔══██║██║███╗██║       ██║   ██║   ██║██║   ██║██║     
+// ██║     ╚██████╔╝██║ ╚████║   ██║       ███████║██║███████╗███████╗    ╚██████╗██║  ██║██║  ██║██║ ╚████║╚██████╔╝███████╗    ██║     ╚██████╔╝██║  ██║    ██████╔╝██║  ██║██║  ██║╚███╔███╔╝       ██║   ╚██████╔╝╚██████╔╝███████╗
+// ╚═╝      ╚═════╝ ╚═╝  ╚═══╝   ╚═╝       ╚══════╝╚═╝╚══════╝╚══════╝     ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚══╝╚══╝        ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝
+
 
 //update marker font styles
 function changeFontStyle(e) {
